@@ -26,7 +26,6 @@ public class PocKafkaStreams {
     Properties settings = new Properties (); 
     settings.put(StreamsConfig.APPLICATION_ID_CONFIG,"se-tutorial-v0.1.0"); 
     settings.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-    //settings.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "pkc-438qm.us-east-1.aws.confluent.cloud:9092");
     //settings.put(StreamsConfig.STATE_DIR_CONFIG, "my-state-store");
     final Serde<String> stringSerde = Serdes.String(); 
     StreamsBuilder builder = new StreamsBuilder();
@@ -34,16 +33,12 @@ public class PocKafkaStreams {
 
     KeyValueBytesStoreSupplier storeSupplier = Stores.persistentKeyValueStore("CustStore");
 
-    //KStream<String, String> filteredCustomers = customers.filter( (key, value) -> value.indexOf("2") > -1); 
-    //filteredCustomers.to("CUSTOMERS_STREAMKEY",Produced.with(stringSerde, stringSerde));
     customers.to("CUSTOMERS_STREAMKEY",Produced.with(stringSerde, stringSerde));
-    //filteredCustomers.to(inMemoryKVFactory,Produced.with(stringSerde, stringSerde));
     KTable<String, String> materializedCustomers = builder.table("CUSTOMERS_STREAMKEY",Materialized.<String, String>as(storeSupplier)
         .withKeySerde(Serdes.String())
         .withValueSerde(Serdes.String()));
 
     Topology topology = builder.build();
-    //System.out.print(topology.describe());
     KafkaStreams streams = new KafkaStreams (topology, settings); 
 
     CompletableFuture<KafkaStreams.State> stateFuture = new CompletableFuture<>();
